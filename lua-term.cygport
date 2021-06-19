@@ -1,0 +1,97 @@
+NAME="lua-term"
+VERSION=0.07p7
+RELEASE=1
+CATEGORY="Lua"
+SUMMARY="Terminal functions for Lua"
+DESCRIPTION="\
+Terminal functions for Lua
+"
+HOMEPAGE="https://github.com/hoelzro/lua-term/"
+
+GIT_REPO="https://github.com/hoelzro/lua-term"
+declare -A GIT_DATEHASH_BY_NAME=(
+  # git log --date=iso-strict --format='%cd/%H' -1
+  [0.07p7]=2019-02-05T20:33:06-06:00/375fa065efc9a95b289371cf0eb7bf8b3be0bc9c
+  [0.07]=2016-04-05T22:11:44-05:00/0.07
+)
+REV_HASH="${GIT_DATEHASH_BY_NAME[${VERSION}]#*/}"
+REV_DATE="${GIT_DATEHASH_BY_NAME[${VERSION}]%/*}"
+REV_DATE_SHORT="${REV_DATE%%T*}"
+GIT_BASENAME="${GIT_REPO##*/}"
+SRC_URI="${GIT_REPO}/archive/${REV_HASH}/${GIT_BASENAME}-${VERSION}.tar.gz"
+SRC_DIR="${GIT_BASENAME}-${REV_HASH#v}"
+
+################################
+LUA_VERSIONS="5.3:5.4"
+LUA_PKG_NAME="${NAME#lua-}"
+source lua.experiment
+
+################################
+## Patch files
+################################
+# Patch filenames are in a default style of 'git format-patch'
+PATCH_URI=$(\
+  find -maxdepth 1 -type f -name '[0-9][0-9][0-9][0-9]-*.patch' \
+  | sort \
+)
+# Additional patches, if any
+PATCH_URI+="
+  0.07-Makefile.patch
+"
+
+################################
+## Requirements for building
+################################
+BUILD_REQUIRES="\
+  lua53-devel\
+  lua54-devel\
+"
+# TEST_REQUIRES="\
+# "
+
+################################
+ABI=0
+
+
+################################
+_CYGPORT_RESTRICT_postinst_doc_=1
+
+set_packages_lua_versions ${LUA_VERSIONS} ${LUA_PKG_NAME}
+
+################################
+src_compile_lua() {
+  mkdir -p ${B}/${LUA_VERSION}
+  cd  ${B}/${LUA_VERSION}
+
+  lndirs ${S} .
+
+  cygmake \
+    LUA_VER=${LUA_VERSION} \
+    LUA_DIR=/usr \
+    LUA_LIBDIR=${LUA_LIBDIR} \
+    LUA_INC=${LUA_INCLUDEDIR} \
+    LUA_SHARE=${LUA_SCRIPTDIR} \
+    LUA_CFLAGS="${LUA_CFLAGS}" \
+    LIBS="${LUA_LIBS}" \
+  ;
+}
+
+################################
+src_install_lua() {
+  cd ${B}/${LUA_VERSION}
+
+  __doinsdir term ${LUA_SCRIPTDIR}/${LUA_PKG_NAME}
+  exeinto ${LUA_LIBDIR}/${LUA_PKG_NAME}
+  doexe core.so
+
+  dodoc CHANGES COPYING *.md *.rockspec
+}
+
+################################
+src_test_lua() {
+  cd ${B}/${LUA_VERSION}
+
+  echo "No test suite."
+}
+
+################################
