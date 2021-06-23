@@ -1,5 +1,5 @@
 category: Lua
-requires: cygwin lua51 lua54-term lua51
+requires: cygwin lua51
 sdesc: "Terminal functions for Lua"
 ldesc: "Terminal functions for Lua
 "
